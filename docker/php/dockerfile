@@ -1,0 +1,21 @@
+FROM php:8.2-apache
+
+RUN apt-get update
+
+# Install MySQL PDO
+RUN docker-php-ext-install pdo pdo_mysql
+
+# Install GD Library for image processing
+RUN apt-get update -y && apt-get install -y libpng-dev libfreetype6-dev libjpeg62-turbo-dev libxpm-dev libwebp-dev
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm
+RUN docker-php-ext-install gd
+
+# Install libyaml before installing YAML extension
+RUN apt-get install -y libyaml-dev
+
+# Install YAML extension
+RUN pecl install yaml && docker-php-ext-enable yaml
+
+# Apache configurations
+RUN usermod -u 1000 www-data
+RUN a2enmod rewrite
