@@ -1,21 +1,27 @@
 FROM php:8.2-apache
 
-RUN apt-get update
+# Mise à jour des paquets et installation des dépendances
+RUN apt-get update && apt-get install -y \
+        libpng-dev \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libxpm-dev \
+        libwebp-dev \
+        libyaml-dev
 
-# Install MySQL PDO
+# Installation de l'extension GD pour le traitement d'images
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm && \
+    docker-php-ext-install gd
+
+# Installation de MySQL PDO
 RUN docker-php-ext-install pdo pdo_mysql
 
-# Install GD Library for image processing
-RUN apt-get update -y && apt-get install -y libpng-dev libfreetype6-dev libjpeg62-turbo-dev libxpm-dev libwebp-dev
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-xpm
-RUN docker-php-ext-install gd
-
-# Install libyaml before installing YAML extension
-RUN apt-get install -y libyaml-dev
-
-# Install YAML extension
+# Installation de l'extension YAML
 RUN pecl install yaml && docker-php-ext-enable yaml
 
-# Apache configurations
-RUN usermod -u 1000 www-data
-RUN a2enmod rewrite
+# Configuration d'Apache
+RUN usermod -u 1000 www-data && \
+    a2enmod rewrite
+
+# Nettoyage du cache APT pour réduire la taille de l'image
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
